@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hangman Game</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="game-container">
+        <h1>Hangman</h1>
+        <div id="hangman-drawing">
+            <svg height="250" width="200" class="hangman">
+                <!-- Base -->
+                <line x1="50" y1="20" x2="130" y2="20"/>
+                <line x1="130" y1="20" x2="130" y2="50"/>
+                <line x1="50" y1="20" x2="50" y2="250"/>
+                <line x1="10" y1="250" x2="90" y2="250"/>
+                
+                <!-- Head -->
+                <circle cx="130" cy="70" r="20" class="hangman-part" />
+                <!-- Body -->
+                <line x1="130" y1="90" x2="130" y2="170" class="hangman-part" />
+                <!-- Arms -->
+                <line x1="130" y1="120" x2="100" y2="100" class="hangman-part" />
+                <line x1="130" y1="120" x2="160" y2="100" class="hangman-part" />
+                <!-- Legs -->
+                <line x1="130" y1="170" x2="100" y2="190" class="hangman-part" />
+                <line x1="130" y1="170" x2="160" y2="190" class="hangman-part" />
+            </svg>
+        </div>
+        <div id="word-display"></div>
+        <div id="letter-buttons"></div>
+        <div id="game-message"></div>
+        <button id="new-game-btn">New Game</button>
+    </div>
+    <script >
+        const words = ['JAVASCRIPT', 'PYTHON', 'HANGMAN', 'DEVELOPER', 'PROGRAMMING'];
+let selectedWord = '';
+let guessedLetters = [];
+let remainingGuesses = 6;
+let gameState = 'playing';
+
+const wordDisplayElement = document.getElementById('word-display');
+const letterButtonsElement = document.getElementById('letter-buttons');
+const gameMessageElement = document.getElementById('game-message');
+const newGameButton = document.getElementById('new-game-btn');
+const hangmanParts = document.querySelectorAll('.hangman-part');
+
+function selectRandomWord() {
+    return words[Math.floor(Math.random() * words.length)];
+}
+
+function displayWord() {
+    wordDisplayElement.textContent = selectedWord
+        .split('')
+        .map(letter => guessedLetters.includes(letter) ? letter : '_')
+        .join(' ');
+}
+
+function createLetterButtons() {
+    for (let i = 65; i <= 90; i++) {
+        const letter = String.fromCharCode(i);
+        const button = document.createElement('button');
+        button.textContent = letter;
+        button.classList.add('letter-btn');
+        button.addEventListener('click', () => handleGuess(letter));
+        letterButtonsElement.appendChild(button);
+    }
+}
+
+function handleGuess(letter) {
+    if (gameState !== 'playing') return;
+
+    if (!guessedLetters.includes(letter)) {
+        guessedLetters.push(letter);
+        if (!selectedWord.includes(letter)) {
+            remainingGuesses--;
+            updateHangmanDrawing();
+        }
+        updateGameState();
+        displayWord();
+    }
+}
+
+function updateHangmanDrawing() {
+    const partsToShow = 6 - remainingGuesses;
+    for (let i = 0; i < partsToShow; i++) {
+        hangmanParts[i].style.display = 'block';
+    }
+}
+
+function updateGameState() {
+    if (remainingGuesses === 0) {
+        gameState = 'lost';
+        gameMessageElement.textContent = `Game Over! The word was ${selectedWord}.`;
+    } else if (!wordDisplayElement.textContent.includes('_')) {
+        gameState = 'won';
+        gameMessageElement.textContent = `Congratulations! You won!`;
+    }
+
+    if (gameState !== 'playing') {
+        letterButtonsElement.querySelectorAll('button').forEach(btn => btn.disabled = true);
+    }
+}
+
+function startNewGame() {
+    selectedWord = selectRandomWord();
+    guessedLetters = [];
+    remainingGuesses = 6;
+    gameState = 'playing';
+    
+    displayWord();
+    gameMessageElement.textContent = '';
+    letterButtonsElement.querySelectorAll('button').forEach(btn => btn.disabled = false);
+    hangmanParts.forEach(part => part.style.display = 'none');
+}
+
+newGameButton.addEventListener('click', startNewGame);
+
+createLetterButtons();
+startNewGame();
+    </script>
+</body>
+</html>
